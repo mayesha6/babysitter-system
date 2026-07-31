@@ -1,0 +1,45 @@
+import { Router } from "express";
+import { UserRoutes } from "../modules/user/user.routes";
+import { AuthRoutes } from "../modules/auth/auth.routes";
+import { OtpRoutes } from "../modules/otp/otp.routes";
+import { ParentRoutes } from "../modules/parent/parent.routes";
+import { SitterRoutes } from "../modules/sitter/sitter.routes";
+import { UploadRoutes } from "./upload.routes";
+import { JobPostRoutes } from "../modules/jobPost/jobPost.routes";
+
+export const router = Router();
+
+const moduleRoutes = [
+    {
+        path: "/auth",
+        route: AuthRoutes
+    },
+    {
+        path: "/otp",
+        route: OtpRoutes
+    },
+    {
+        path: "/user",
+        route: UserRoutes
+    },
+    {
+        path: "/parent-profile",
+        route: ParentRoutes
+    },
+    {
+        path: "/sitter-profile",
+        route: SitterRoutes
+    },
+    {
+        path: "/upload",
+        route: UploadRoutes
+    },
+    {
+        path: "/job-post",
+        route: JobPostRoutes
+    }
+];
+
+moduleRoutes.forEach((route) => {
+    router.use(route.path, route.route);
+});
