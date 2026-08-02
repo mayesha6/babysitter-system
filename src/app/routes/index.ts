@@ -10,6 +10,7 @@ import { BookingRoutes } from "../modules/booking/booking.routes";
 import { ReviewRoutes } from "../modules/review/review.routes";
 import { PaymentRoutes } from "../modules/payment/payment.routes";
 import { NotificationRoutes } from "../modules/notification/notification.routes";
+import { ChatRoutes } from "../modules/chat/chat.routes";
 
 export const router = Router();
 
@@ -57,6 +58,10 @@ const moduleRoutes = [
     {
         path: "/notifications",
         route: NotificationRoutes
+    },
+    {
+        path: "/chats",
+        route: ChatRoutes
     }
 ];
 

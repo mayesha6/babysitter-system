@@ -5,6 +5,7 @@ import app from "./app";
 import { envVars } from "./app/config/env";
 import { connectRedis } from "./app/config/redis.config";
 import { seedSuperAdmin } from "./app/utils/seedSuperAdmin";
+import { initializeSocket } from "./app/utils/socket";
 
 let server: Server;
 
@@ -20,6 +21,9 @@ const startServer = async () => {
         server = app.listen(Number(envVars.PORT), () => {
             console.log(`Server is listening to port ${envVars.PORT}`);
         });
+
+        // Initialize Socket.io
+        initializeSocket(server);
     } catch (error) {
         console.log(error);
     }

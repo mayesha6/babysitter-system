@@ -1370,6 +1370,92 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Chat",
+      "item": [
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recipientId\": \"recipient_user_id_here\",\n  \"message\": \"Hello, how are you?\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{url}}/chats",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "chats"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Conversations (Inbox)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{url}}/chats/conversations",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "chats",
+                "conversations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Messages in Conversation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{url}}/chats/messages/{{conversationId}}",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "chats",
+                "messages",
+                "{{conversationId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ]
 }
