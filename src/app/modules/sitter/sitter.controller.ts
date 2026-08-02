@@ -59,10 +59,25 @@ const deleteSitterProfile = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const verifySitterProfile = catchAsync(async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  const adminId = (req.user as any).userId;
+  const { status } = req.body;
+  const result = await SitterServices.verifySitterProfile(userId, adminId, status);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Babysitter verification status updated successfully",
+    data: result,
+  });
+});
+
 export const SitterControllers = {
   createSitterProfile,
   getSitterProfile,
   getAllSitterProfiles,
   updateSitterProfile,
   deleteSitterProfile,
+  verifySitterProfile,
 };

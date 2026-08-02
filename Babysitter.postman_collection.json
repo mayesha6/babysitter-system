@@ -711,6 +711,40 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Verify Sitter Profile (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"VERIFIED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{url}}/sitter-profile/{{userId}}/verify",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "sitter-profile",
+                "{{userId}}",
+                "verify"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },

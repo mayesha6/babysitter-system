@@ -3,7 +3,7 @@ import { checkAuth } from "../../middlewares/checkAuth";
 import { validateRequest } from "../../middlewares/validateRequest";
 import { Role } from "../user/user.interface";
 import { SitterControllers } from "./sitter.controller";
-import { createSitterProfileZodSchema, updateSitterProfileZodSchema } from "./sitter.validation";
+import { createSitterProfileZodSchema, updateSitterProfileZodSchema, verifySitterProfileZodSchema } from "./sitter.validation";
 
 const router = Router();
 
@@ -37,6 +37,13 @@ router.delete(
   "/:userId",
   checkAuth(Role.SUPER_ADMIN, Role.ADMIN),
   SitterControllers.deleteSitterProfile
+);
+
+router.patch(
+  "/:userId/verify",
+  checkAuth(Role.SUPER_ADMIN, Role.ADMIN),
+  validateRequest(verifySitterProfileZodSchema),
+  SitterControllers.verifySitterProfile
 );
 
 export const SitterRoutes = router;

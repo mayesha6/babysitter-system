@@ -61,3 +61,9 @@ export const updateSitterProfileZodSchema = z.object({
     verificationStatus: z.enum(Object.values(VerificationStatus) as [string, ...string[]]).optional(),
   }),
 });
+
+export const verifySitterProfileZodSchema = z.object({
+  body: z.object({
+    status: z.enum(["VERIFIED", "REJECTED"]),
+  }),
+});
