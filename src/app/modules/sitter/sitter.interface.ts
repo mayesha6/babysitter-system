@@ -42,6 +42,8 @@ export interface IBabysitterProfile {
   verificationStatus?: VerificationStatus;
   verifiedBy?: Types.ObjectId | string;
   verifiedAt?: Date;
+  averageRating?: number;
+  reviewCount?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }

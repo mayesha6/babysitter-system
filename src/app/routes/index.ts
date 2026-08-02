@@ -7,6 +7,7 @@ import { SitterRoutes } from "../modules/sitter/sitter.routes";
 import { UploadRoutes } from "./upload.routes";
 import { JobPostRoutes } from "../modules/jobPost/jobPost.routes";
 import { BookingRoutes } from "../modules/booking/booking.routes";
+import { ReviewRoutes } from "../modules/review/review.routes";
 
 export const router = Router();
 
@@ -42,6 +43,10 @@ const moduleRoutes = [
     {
         path: "/bookings",
         route: BookingRoutes
+    },
+    {
+        path: "/reviews",
+        route: ReviewRoutes
     }
 ];
 

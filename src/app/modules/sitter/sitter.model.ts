@@ -45,7 +45,9 @@ const babysitterProfileSchema = new Schema<IBabysitterProfile>({
         type: Schema.Types.ObjectId,
         ref: "User"
     },
-    verifiedAt: { type: Date }
+    verifiedAt: { type: Date },
+    averageRating: { type: Number, default: 0 },
+    reviewCount: { type: Number, default: 0 }
 }, {
     timestamps: true,
     versionKey: false
