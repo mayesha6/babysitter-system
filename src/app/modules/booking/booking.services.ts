@@ -8,6 +8,8 @@ import { QueryBuilder } from "../../utils/QueryBuiler";
 import { bookingSearchableFields } from "./booking.constant";
 import { NotificationServices } from "../notification/notification.services";
 import { NotificationType } from "../notification/notification.interface";
+import { BabysitterProfile } from "../sitter/sitter.model";
+import { VerificationStatus } from "../sitter/sitter.interface";
 
 const createBooking = async (parentId: string, payload: Partial<IBooking>) => {
   // Check if sitter exists and is a babysitter
@@ -17,6 +19,18 @@ const createBooking = async (parentId: string, payload: Partial<IBooking>) => {
   }
   if (sitter.role !== Role.BABYSITTER) {
     throw new AppError(httpStatus.BAD_REQUEST, "Selected user is not a babysitter");
+  }
+
+  // Check if sitter is verified
+  const sitterProfile = await BabysitterProfile.findOne({ user: payload.sitter });
+  if (!sitterProfile) {
+    throw new AppError(httpStatus.NOT_FOUND, "Babysitter profile not found");
+  }
+  if (sitterProfile.verificationStatus !== VerificationStatus.VERIFIED) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "This babysitter's profile is not verified by administrators yet."
+    );
   }
 
   // Calculate total amount

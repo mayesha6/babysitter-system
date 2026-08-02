@@ -8,6 +8,8 @@ import { Booking } from "../booking/booking.model";
 import { BookingStatus, PaymentStatus } from "../booking/booking.interface";
 import { NotificationServices } from "../notification/notification.services";
 import { NotificationType } from "../notification/notification.interface";
+import { BabysitterProfile } from "../sitter/sitter.model";
+import { VerificationStatus } from "../sitter/sitter.interface";
 
 const createJobPost = async (payload: IJobPost) => {
   const result = await JobPost.create(payload);
@@ -80,6 +82,19 @@ const deleteJobPost = async (id: string, userId: string, userRole: string) => {
 };
 
 const applyToJobPost = async (id: string, sitterId: string) => {
+  // Check if sitter is verified
+  const sitterProfile = await BabysitterProfile.findOne({ user: sitterId });
+  if (!sitterProfile) {
+    throw new AppError(httpStatus.NOT_FOUND, "Babysitter profile not found");
+  }
+
+  if (sitterProfile.verificationStatus !== VerificationStatus.VERIFIED) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Your profile must be verified by an administrator to apply for jobs."
+    );
+  }
+
   const job = await JobPost.findById(id);
   if (!job) {
     throw new AppError(httpStatus.NOT_FOUND, "Job post not found");
@@ -141,6 +156,15 @@ const updateApplicantStatus = async (
   }
 
   if (status === ApplicantStatus.ACCEPTED) {
+    // Check if sitter is verified
+    const sitterProfile = await BabysitterProfile.findOne({ user: sitterId });
+    if (!sitterProfile || sitterProfile.verificationStatus !== VerificationStatus.VERIFIED) {
+      throw new AppError(
+        httpStatus.FORBIDDEN,
+        "Cannot accept application: this babysitter's profile is not verified."
+      );
+    }
+
     if (job.status !== JobStatus.OPEN) {
       throw new AppError(httpStatus.BAD_REQUEST, "This job is no longer open for hiring");
     }
