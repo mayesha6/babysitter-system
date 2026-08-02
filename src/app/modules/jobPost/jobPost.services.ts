@@ -1,9 +1,11 @@
 import httpStatus from "http-status-codes";
 import AppError from "../../errorHelpers/AppError";
-import { IJobPost, ApplicantStatus } from "./jobPost.interface";
+import { IJobPost, ApplicantStatus, JobStatus } from "./jobPost.interface";
 import { JobPost } from "./jobPost.model";
 import { QueryBuilder } from "../../utils/QueryBuiler";
 import { jobPostSearchableFields } from "./jobPost.constant";
+import { Booking } from "../booking/booking.model";
+import { BookingStatus, PaymentStatus } from "../booking/booking.interface";
 
 const createJobPost = async (payload: IJobPost) => {
   const result = await JobPost.create(payload);
@@ -126,18 +128,74 @@ const updateApplicantStatus = async (
     throw new AppError(httpStatus.FORBIDDEN, "You do not have permission to manage this job's applicants");
   }
 
-  // Update specific applicant status inside array
-  const result = await JobPost.findOneAndUpdate(
-    { _id: id, "applicants.sitter": sitterId },
-    { $set: { "applicants.$.status": status } },
-    { new: true }
-  ).populate("applicants.sitter", "-password");
+  if (status === ApplicantStatus.ACCEPTED) {
+    if (job.status !== JobStatus.OPEN) {
+      throw new AppError(httpStatus.BAD_REQUEST, "This job is no longer open for hiring");
+    }
 
-  if (!result) {
-    throw new AppError(httpStatus.NOT_FOUND, "Applicant not found for this job post");
+    // Update job status to HIRED
+    job.status = JobStatus.HIRED;
+
+    // Update applicant statuses
+    let applicantFound = false;
+    if (job.applicants) {
+      job.applicants.forEach((applicant) => {
+        if (applicant.sitter.toString() === sitterId) {
+          applicant.status = ApplicantStatus.ACCEPTED;
+          applicantFound = true;
+        } else if (applicant.status === ApplicantStatus.PENDING) {
+          applicant.status = ApplicantStatus.REJECTED;
+        }
+      });
+    }
+
+    if (!applicantFound) {
+      throw new AppError(httpStatus.NOT_FOUND, "Applicant not found for this job post");
+    }
+
+    await job.save();
+
+    // Create Booking automatically
+    const totalHours = calculateTotalHours(
+      job.startDate,
+      job.endDate,
+      job.startTime,
+      job.endTime
+    );
+    const totalAmount = totalHours * job.hourlyRate;
+
+    await Booking.create({
+      parent: parentId,
+      sitter: sitterId,
+      jobPost: id,
+      startDate: job.startDate,
+      endDate: job.endDate,
+      startTime: job.startTime,
+      endTime: job.endTime,
+      hourlyRate: job.hourlyRate,
+      totalHours,
+      totalAmount,
+      paymentStatus: PaymentStatus.PENDING,
+      status: BookingStatus.ACCEPTED,
+    });
+  } else {
+    // For other statuses (e.g. REJECTED), just update the applicant status in the array
+    const result = await JobPost.findOneAndUpdate(
+      { _id: id, "applicants.sitter": sitterId },
+      { $set: { "applicants.$.status": status } },
+      { new: true }
+    );
+
+    if (!result) {
+      throw new AppError(httpStatus.NOT_FOUND, "Applicant not found for this job post");
+    }
   }
 
-  return result;
+  const updatedJob = await JobPost.findById(id)
+    .populate("parent", "-password")
+    .populate("applicants.sitter", "-password");
+
+  return updatedJob;
 };
 
 export const JobPostServices = {
@@ -148,4 +206,47 @@ export const JobPostServices = {
   deleteJobPost,
   applyToJobPost,
   updateApplicantStatus,
+};
+
+const parseTimeToHours = (timeStr: string): number => {
+  const cleanTime = timeStr.trim().toUpperCase();
+  const ampmMatch = cleanTime.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
+  if (ampmMatch) {
+    let hours = parseInt(ampmMatch[1], 10);
+    const minutes = parseInt(ampmMatch[2], 10);
+    const ampm = ampmMatch[3];
+    if (ampm === "PM" && hours < 12) hours += 12;
+    if (ampm === "AM" && hours === 12) hours = 0;
+    return hours + minutes / 60;
+  }
+  
+  const simpleMatch = cleanTime.match(/^(\d{1,2}):(\d{2})$/);
+  if (simpleMatch) {
+    const hours = parseInt(simpleMatch[1], 10);
+    const minutes = parseInt(simpleMatch[2], 10);
+    return hours + minutes / 60;
+  }
+
+  return 0;
+};
+
+const calculateTotalHours = (startDate: Date, endDate: Date, startTime: string, endTime: string): number => {
+  const startHrs = parseTimeToHours(startTime);
+  const endHrs = parseTimeToHours(endTime);
+  
+  let hoursPerDay = endHrs - startHrs;
+  if (hoursPerDay < 0) {
+    hoursPerDay += 24;
+  }
+
+  const startD = new Date(startDate);
+  const endD = new Date(endDate);
+  
+  startD.setHours(0, 0, 0, 0);
+  endD.setHours(0, 0, 0, 0);
+  
+  const msDiff = endD.getTime() - startD.getTime();
+  const dayCount = Math.max(1, Math.round(msDiff / (1000 * 60 * 60 * 24)) + 1);
+
+  return dayCount * hoursPerDay;
 };

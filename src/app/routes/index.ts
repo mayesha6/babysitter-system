@@ -6,6 +6,7 @@ import { ParentRoutes } from "../modules/parent/parent.routes";
 import { SitterRoutes } from "../modules/sitter/sitter.routes";
 import { UploadRoutes } from "./upload.routes";
 import { JobPostRoutes } from "../modules/jobPost/jobPost.routes";
+import { BookingRoutes } from "../modules/booking/booking.routes";
 
 export const router = Router();
 
@@ -37,6 +38,10 @@ const moduleRoutes = [
     {
         path: "/job-post",
         route: JobPostRoutes
+    },
+    {
+        path: "/bookings",
+        route: BookingRoutes
     }
 ];
 
