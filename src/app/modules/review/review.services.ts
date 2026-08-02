@@ -9,6 +9,8 @@ import { BabysitterProfile } from "../sitter/sitter.model";
 import { QueryBuilder } from "../../utils/QueryBuiler";
 import { reviewSearchableFields } from "./review.constant";
 import { Role } from "../user/user.interface";
+import { NotificationServices } from "../notification/notification.services";
+import { NotificationType } from "../notification/notification.interface";
 
 const updateAverageRating = async (sitterId: string | Types.ObjectId) => {
   const stats = await Review.aggregate([
@@ -85,6 +87,16 @@ const createReview = async (parentId: string, payload: Partial<IReview>) => {
 
   // Update sitter's profile rating stats
   await updateAverageRating(booking.sitter);
+
+  // Notify the Sitter about the new review
+  await NotificationServices.createNotification({
+    recipient: booking.sitter.toString(),
+    sender: parentId,
+    title: "New Review Received",
+    message: `A parent left you a ${payload.rating}-star review.`,
+    type: NotificationType.REVIEW,
+    link: `/reviews`,
+  });
 
   return result;
 };

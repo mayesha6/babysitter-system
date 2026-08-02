@@ -6,6 +6,8 @@ import { User } from "../user/user.model";
 import { Role } from "../user/user.interface";
 import { QueryBuilder } from "../../utils/QueryBuiler";
 import { bookingSearchableFields } from "./booking.constant";
+import { NotificationServices } from "../notification/notification.services";
+import { NotificationType } from "../notification/notification.interface";
 
 const createBooking = async (parentId: string, payload: Partial<IBooking>) => {
   // Check if sitter exists and is a babysitter
@@ -30,6 +32,17 @@ const createBooking = async (parentId: string, payload: Partial<IBooking>) => {
   };
 
   const result = await Booking.create(bookingData);
+
+  // Notify Sitter about the new direct booking request
+  await NotificationServices.createNotification({
+    recipient: payload.sitter.toString(),
+    sender: parentId,
+    title: "New Booking Request",
+    message: "You have received a direct booking request.",
+    type: NotificationType.BOOKING,
+    link: `/bookings`,
+  });
+
   return result;
 };
 
@@ -172,6 +185,38 @@ const updateBookingStatus = async (
     .populate("parent", "name email phone")
     .populate("sitter", "name email phone")
     .populate("jobPost");
+
+  if (result) {
+    // Trigger notifications based on new status
+    if (status === BookingStatus.ACCEPTED) {
+      await NotificationServices.createNotification({
+        recipient: parentIdStr,
+        sender: sitterIdStr,
+        title: "Booking Request Accepted",
+        message: "The babysitter has accepted your booking request.",
+        type: NotificationType.BOOKING,
+        link: `/bookings`,
+      });
+    } else if (status === BookingStatus.CANCELLED) {
+      const recipient = userId === parentIdStr ? sitterIdStr : parentIdStr;
+      await NotificationServices.createNotification({
+        recipient,
+        sender: userId,
+        title: "Booking Cancelled",
+        message: `Booking #${id} has been cancelled.`,
+        type: NotificationType.BOOKING,
+      });
+    } else if (status === BookingStatus.COMPLETED) {
+      await NotificationServices.createNotification({
+        recipient: parentIdStr,
+        sender: sitterIdStr,
+        title: "Booking Completed",
+        message: "Your booking is marked completed. Please leave a review for the sitter!",
+        type: NotificationType.REVIEW,
+        link: `/bookings`,
+      });
+    }
+  }
 
   return result;
 };

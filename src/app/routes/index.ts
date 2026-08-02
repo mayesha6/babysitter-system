@@ -9,6 +9,7 @@ import { JobPostRoutes } from "../modules/jobPost/jobPost.routes";
 import { BookingRoutes } from "../modules/booking/booking.routes";
 import { ReviewRoutes } from "../modules/review/review.routes";
 import { PaymentRoutes } from "../modules/payment/payment.routes";
+import { NotificationRoutes } from "../modules/notification/notification.routes";
 
 export const router = Router();
 
@@ -52,6 +53,10 @@ const moduleRoutes = [
     {
         path: "/payments",
         route: PaymentRoutes
+    },
+    {
+        path: "/notifications",
+        route: NotificationRoutes
     }
 ];
 

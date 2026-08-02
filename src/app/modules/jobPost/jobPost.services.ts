@@ -6,6 +6,8 @@ import { QueryBuilder } from "../../utils/QueryBuiler";
 import { jobPostSearchableFields } from "./jobPost.constant";
 import { Booking } from "../booking/booking.model";
 import { BookingStatus, PaymentStatus } from "../booking/booking.interface";
+import { NotificationServices } from "../notification/notification.services";
+import { NotificationType } from "../notification/notification.interface";
 
 const createJobPost = async (payload: IJobPost) => {
   const result = await JobPost.create(payload);
@@ -109,6 +111,16 @@ const applyToJobPost = async (id: string, sitterId: string) => {
     { new: true }
   ).populate("applicants.sitter", "-password");
 
+  // Notify the Parent of the new application
+  await NotificationServices.createNotification({
+    recipient: job.parent.toString(),
+    sender: sitterId,
+    title: "New Job Application",
+    message: `A babysitter has applied to your job post: "${job.title}"`,
+    type: NotificationType.JOB_POST,
+    link: `/job-post/${job._id}`,
+  });
+
   return result;
 };
 
@@ -178,6 +190,34 @@ const updateApplicantStatus = async (
       paymentStatus: PaymentStatus.PENDING,
       status: BookingStatus.ACCEPTED,
     });
+
+    // Notify the accepted Sitter
+    await NotificationServices.createNotification({
+      recipient: sitterId,
+      sender: parentId,
+      title: "Application Accepted",
+      message: `Your application to "${job.title}" has been accepted! A booking has been created.`,
+      type: NotificationType.BOOKING,
+      link: `/bookings`,
+    });
+
+    // Notify other applicants who are now rejected
+    if (job.applicants) {
+      for (const applicant of job.applicants) {
+        if (
+          applicant.sitter.toString() !== sitterId &&
+          applicant.status === ApplicantStatus.REJECTED
+        ) {
+          await NotificationServices.createNotification({
+            recipient: applicant.sitter.toString(),
+            sender: parentId,
+            title: "Application Update",
+            message: `Your application to "${job.title}" was not selected.`,
+            type: NotificationType.JOB_POST,
+          });
+        }
+      }
+    }
   } else {
     // For other statuses (e.g. REJECTED), just update the applicant status in the array
     const result = await JobPost.findOneAndUpdate(
@@ -189,6 +229,15 @@ const updateApplicantStatus = async (
     if (!result) {
       throw new AppError(httpStatus.NOT_FOUND, "Applicant not found for this job post");
     }
+
+    // Notify the sitter of manual rejection/update
+    await NotificationServices.createNotification({
+      recipient: sitterId,
+      sender: parentId,
+      title: "Application Update",
+      message: `Your application to "${job.title}" was ${status.toLowerCase()}.`,
+      type: NotificationType.JOB_POST,
+    });
   }
 
   const updatedJob = await JobPost.findById(id)

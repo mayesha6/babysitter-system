@@ -9,6 +9,8 @@ import { Booking } from "../booking/booking.model";
 import { BookingStatus, PaymentStatus as BookingPaymentStatus } from "../booking/booking.interface";
 import { QueryBuilder } from "../../utils/QueryBuiler";
 import { Role } from "../user/user.interface";
+import { NotificationServices } from "../notification/notification.services";
+import { NotificationType } from "../notification/notification.interface";
 
 const createPaymentIntent = async (userId: string, bookingId: string) => {
   const booking = await Booking.findById(bookingId);
@@ -86,7 +88,7 @@ const handleStripeWebhook = async (event: any) => {
 
   try {
     if (event.type === "payment_intent.succeeded") {
-      const { bookingId } = stripeObject.metadata || {};
+      const { bookingId, parentId, sitterId } = stripeObject.metadata || {};
 
       if (bookingId) {
         // 1. Update Booking status to PAID
@@ -99,6 +101,18 @@ const handleStripeWebhook = async (event: any) => {
           { paymentIntentId: stripeObject.id },
           { status: PaymentStatus.PAID }
         );
+
+        // 3. Notify the Sitter that they have been paid
+        if (sitterId && parentId) {
+          await NotificationServices.createNotification({
+            recipient: sitterId,
+            sender: parentId,
+            title: "Payment Received",
+            message: `Payment for booking #${bookingId} has been successfully paid.`,
+            type: NotificationType.BOOKING,
+            link: `/bookings`,
+          });
+        }
         
         console.log(`✅ Payment successful for Booking: ${bookingId}`);
       }
