@@ -1207,6 +1207,68 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Payment",
+      "item": [
+        {
+          "name": "Create Payment Intent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingId\": \"booking_id_here\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{url}}/payments/create-intent",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "payments",
+                "create-intent"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Payment History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{url}}/payments/history",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "payments",
+                "history"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ]
 }
