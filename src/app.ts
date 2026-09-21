@@ -15,13 +15,19 @@ const app = express()
 app.post("/webhook", express.raw({ type: "application/json" }), PaymentControllers.stripeWebhook);
 
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "https://babysitter-frontend-bxenl0vql-mayeshas-projects-99e82fa2.vercel.app",
+];
+
 app.use(
   cors({
     origin: function (origin, callback) {
       if (!origin) return callback(null, true);
-      const isLocal = origin.includes('localhost') || origin.includes('127.0.0.1');
-      const isVercel = origin.endsWith('.vercel.app');
-      if (isLocal || isVercel) {
+      const isLocal = origin.includes("localhost") || origin.includes("127.0.0.1");
+      const isVercel = origin.endsWith(".vercel.app");
+      if (isLocal || isVercel || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
       return callback(null, true);
