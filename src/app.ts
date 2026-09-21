@@ -15,44 +15,16 @@ const app = express()
 app.post("/webhook", express.raw({ type: "application/json" }), PaymentControllers.stripeWebhook);
 
 
-app.use(expressSession({
-  secret: envVars.EXPRESS_SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false
-}))
-app.use(passport.initialize())
-app.use(passport.session())
-app.use(cookieParser())
-app.use(express.json())
-app.set("trust proxy", 1);
-app.use(express.urlencoded({ extended: true }))
-// app.use(cors({
-//     origin: [envVars.FRONTEND_URL, envVars.FRONTEND_LOCALHOST_URL, envVars.DASHBOARD_URL, envVars.DASHBOARD_LOCALHOST_URL, envVars.FRONTEND_DOMAIN_URL, envVars.DASHBOARD_DOMAIN_URL],
-//     credentials: true
-// }))
-
 app.use(
   cors({
     origin: function (origin, callback) {
-      console.log("Request Origin:", origin);
-
-      const allowedOrigins = [
-        envVars.FRONTEND_URL,
-        // envVars.FRONTEND_LOCALHOST_URL,
-        // envVars.DASHBOARD_URL,
-        // envVars.DASHBOARD_LOCALHOST_URL,
-        // envVars.FRONTEND_DOMAIN_URL,
-        // envVars.DASHBOARD_DOMAIN_URL,
-      ];
-
-      console.log("Allowed Origins:", allowedOrigins);
-
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.log("Blocked by CORS:", origin);
-        callback(new Error("Not allowed by CORS"));
+      if (!origin) return callback(null, true);
+      const isLocal = origin.includes('localhost') || origin.includes('127.0.0.1');
+      const isVercel = origin.endsWith('.vercel.app');
+      if (isLocal || isVercel) {
+        return callback(null, true);
       }
+      return callback(null, true);
     },
     credentials: true,
   })
