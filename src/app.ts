@@ -18,7 +18,7 @@ app.post("/webhook", express.raw({ type: "application/json" }), PaymentControlle
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
-  "https://babysitter-frontend-bxenl0vql-mayeshas-projects-99e82fa2.vercel.app",
+  "https://babysitter-frontend-seven.vercel.app",
 ];
 
 app.use(
