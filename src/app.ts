@@ -36,6 +36,11 @@ app.use(
   })
 );
 
+app.use(express.json());
+app.use(cookieParser());
+app.use(express.urlencoded({ extended: true }));
+app.use(passport.initialize());
+
 app.use("/api/v1", router)
 
 app.get("/", (req: Request, res: Response) => {
